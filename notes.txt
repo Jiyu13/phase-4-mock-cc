@@ -1,0 +1,101 @@
+class Hero(db.Model, SerializerMixin):
+
+    # hero_power reference to one hero and one power
+    # -hero_powers.hero -> extract only hero_id instead of the whole hero object
+    # '-powers.heroes' does nothing here
+    serialize_rules = ('-hero_powers.hero', '-powers.heroes',)
+
+
+class Power(db.Model, SerializerMixin):
+    # '-hero_powers.power', will not show power obj inside hero_powers
+    serialize_rules = ('-hero_powers.power', '-heroes.powers',)
+
+    "power": {
+                "created_at": "2023-03-21 12:40:13",
+                "description": "gives the wielder super-human strengths",
+                "id": 1,
+                "name": "super strength",
+                "updated_at": null
+            },
+
+
+class HeroPower(db.Model, SerializerMixin):
+    serialize_rules = ('-power.hero_powers', '-hero.hero_powers',)
+
+    # '-power.hero_powers', -> will not show hero_powers inside power
+    "hero_powers": [
+            {
+                "created_at": "2023-03-21 12:40:13",
+                "hero": {
+                    "created_at": "2023-03-21 12:40:13",
+                    "id": 2,
+                    "name": "Doreen Green",
+                    "super_name": "Squirrel Girl",
+                    "updated_at": null
+                },
+                "hero_id": 2,
+                "id": 2,
+                "power_id": 1,
+                "strength": "Average",
+                "updated_at": null
+            },
+            {
+                "created_at": "2023-03-21 12:40:13",
+                "hero": {
+                    "created_at": "2023-03-21 12:40:13",
+                    "id": 4,
+                    "name": "Janet Van Dyne",
+                    "super_name": "The Wasp",
+                    "updated_at": null
+                },
+                "hero_id": 4,
+                "id": 4,
+                "power_id": 1,
+                "strength": "Strong",
+                "updated_at": null
+            },
+            {
+                "created_at": "2023-03-21 12:40:13",
+                "hero": {
+                    "created_at": "2023-03-21 12:40:13",
+                    "id": 7,
+                    "name": "Jean Grey",
+                    "super_name": "Dark Phoenix",
+                    "updated_at": null
+                },
+                "hero_id": 7,
+                "id": 7,
+                "power_id": 1,
+                "strength": "Weak",
+                "updated_at": null
+            },
+            {
+                "created_at": "2023-03-21 12:40:13",
+                "hero": {
+                    "created_at": "2023-03-21 12:40:13",
+                    "id": 8,
+                    "name": "Ororo Munroe",
+                    "super_name": "Storm",
+                    "updated_at": null
+                },
+                "hero_id": 8,
+                "id": 8,
+                "power_id": 1,
+                "strength": "Average",
+                "updated_at": null
+            }
+    ]
+            
+class HeroPowerByID(Resource):
+    def get(self, id):
+        hero_power = HeroPower.query.filter_by(id=id).first()
+        # rules=("-hero",) -> will not show hero obj
+        return make_response(hero_power.to_dict(), 200)
+        
+        "hero": {
+            "created_at": "2023-03-21 12:40:13",
+            "id": 2,
+            "name": "Doreen Green",
+            "super_name": "Squirrel Girl",
+            "updated_at": null
+        },
