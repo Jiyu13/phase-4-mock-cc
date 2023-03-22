@@ -4,7 +4,7 @@ from flask import Flask, make_response, jsonify, request
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 
-from models import db, Hero
+from models import db, Hero, Power, HeroPower
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -25,160 +25,101 @@ def home():
 class Heroes(Resource):
     def get(self):
         heroes = Hero.query.all()
-        heroes_dict = [hero.to_dict() for hero in heroes]
+        # don't show hero_powers obj
+        heroes_dict = [hero.to_dict(rules=("-hero_powers",)) for hero in heroes]
         return make_response(jsonify(heroes_dict), 200)
-
 api.add_resource(Heroes, '/heroes')
 
 
-if __name__ == '__main__':
-    app.run(port=5555, debug=True)
-from flask import Flask, make_response, request, jsonify
-from flask_migrate import Migrate
-from flask_restful import Api, Resource
+class HeroByID(Resource):
+    def get(self, id):
+        hero = Hero.query.filter_by(id=id).first()
+        if not hero:
+            message = {
+                "error": "Hero not found"
+            }
+            return make_response(message, 404)
+        # powers = hero.powers
+        # powers_dict = []
+        # for power in powers:
+        #     powers_dict.append(power.to_dict())
 
-from models import db, Hero, Power, HeroPower
+        # print(powers_dict)
+        # rules=("-created_at", "-updated_at", "-hero_powers")
+        return make_response(hero.to_dict(), 200)
+api.add_resource(HeroByID, '/heroes/<int:id>')
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
+class Powers(Resource):
+    def get(self):
+        powers = Power.query.all()
+        powers_dict = [power.to_dict(rules=('-hero_powers',)) for power in powers]
+        return make_response(jsonify(powers_dict), 200)
+api.add_resource(Powers, "/powers")
 
-migrate = Migrate(app, db)
 
-db.init_app(app)
+class PowerByID(Resource):
+    # __ means private
+    def __get_power(self, id):
+        power = Power.query.filter_by(id=id).first()
+        if not power:
+            message = {
+                "error": "Power not found"
+            }
+            return (None, message)
+        return (power, None)
 
-api = Api(app)
-
-@app.route('/')
-def home():
-    return ''
-
-@app.route('/heroes', methods = ['GET'])
-def heroes():
-    heroes = Hero.query.all()
-    heroes_dict = [hero.to_dict(rules = ('-hero_powers',)) for hero in heroes]
-
-    response = make_response(
-        jsonify(heroes_dict),
-        200
-    )
-
-    return response
-
-@app.route('/heroes/<int:id>', methods = ['GET'])
-def heroByID(id):
-    hero = Hero.query.filter_by(id = id).first()
-
-    if hero:
-
-        hero_dict = hero.to_dict()
-
-        response = make_response(
-            jsonify(hero_dict),
-            200
-        )
-
-    else:
-
-        response = make_response(
-            {"error": "Hero not found"},
-            404
-        )
-
-    return response
-
-@app.route('/powers', methods = ['GET'])
-def powers():
-    powers = Power.query.all()
-    # rules = ('-hero_powers',)
-    powers_dict = [power.to_dict() for power in powers]
-
-    response = make_response(
-        jsonify(powers_dict),
-        200
-    )
-
-    return response
-
-@app.route('/powers/<int:id>', methods = ['GET', 'PATCH'])
-def powerByID(id):
-    power = Power.query.filter_by(id = id).first()
-
-    if power:
-
-        if request.method == 'GET':
-
-            power_dict = power.to_dict(rules = ('-hero_powers',))
-
-            response = make_response(
-                jsonify(power_dict),
-                200
-            )
-
-        elif request.method == 'PATCH':
-
+    def get(self, id):
+        # power = Power.query.filter_by(id=id).first()
+        power, error_message = self.__get_power(id)
+        if not power:
+            # error_message = {
+            #     "error": "Power not found"
+            # }
+            return make_response(error_message, 404)
+        return make_response(jsonify(power.to_dict(rules=('-hero_powers',))), 200)
+    
+    def patch(self, id):
+        # power = Power.query.filter_by(id=id).first()
+        power, error_message = self.__get_power(id)
+        if not power:
+            # error_message = {
+            #     "error": "Power not found"
+            # }
+            return make_response(error_message, 404)
+        else:
             try:
-
-                for key in request.get_json():
-                    setattr(power, key, request.get_json()[key])
-
+                for attr in request.get_json():
+                    setattr(power, attr, request.get_json()[attr])
                 db.session.add(power)
                 db.session.commit()
-
-                power_dict = power.to_dict()
-
-                response = make_response(
-                    jsonify(power_dict),
-                    200
-                )
-
+                response = make_response(power.to_dict(rules=('-hero_powers',)), 200)
             except ValueError:
+                message = {"error": "Invalid input"}
+                response = make_response(message, 404)
+            return response
+api.add_resource(PowerByID, "/powers/<int:id>")
 
-                response = make_response(
-                    {"error": "Invalid input"},
-                    400
-                )
 
-    else:
+class HeroPowers(Resource):
+    def post(self):
+        try:
+            # new obj should be inside of try, 
+            # otherwise if strength fails, only trigger except, never get the return response
+            new_hero_power = HeroPower(
+                strength=request.get_json()["strength"],
+                hero_id=request.get_json()["hero_id"],
+                power_id=request.get_json()["power_id"]
+            )
+            db.session.add(new_hero_power)
+            db.session.commit()
 
-        response = make_response(
-            {"error": "Power not found"},
-            404
-        )
+            hero = Hero.query.filter_by(id=new_hero_power.hero_id).first()
+            response = make_response(hero.to_dict(), 201)
+        except ValueError:
+            response = {"error": "Invalid input"}
+        return response
+api.add_resource(HeroPowers, "/hero_powers")
 
-    return response
-
-@app.route('/hero_powers', methods = ['POST'])
-def heroPowers():
-
-    try:
-
-        new_hero_power = HeroPower(
-            strength = request.get_json()['strength'],
-            hero_id = request.get_json()['hero_id'],
-            power_id = request.get_json()['power_id']
-        )
-
-        db.session.add(new_hero_power)
-        db.session.commit()
-
-        hero = Hero.query.filter(Hero.id == new_hero_power.hero_id).first()
-        hero_dict = hero.to_dict()
-
-        response = make_response(
-            jsonify(hero_dict),
-            201
-        )
-
-    except ValueError:
-
-        response = make_response(
-            {"error": "Invalid input"},
-            400
-        )
-
-    return response
 
 
 if __name__ == '__main__':

@@ -1,0 +1,26 @@
+1. forget , at the end of serialize_rules
+    AttributeError: 'Hero' object has no attribute ''
+
+
+2. app.app_context() error
+    cannot put hero = Hero.query.filter_by(id=id).first() outside of http request function
+
+
+3. create new objt should be insdie try, otherwise if try fails, 
+   it will only goes to except that never return a response
+#        try:
+#             # new obj should be inside of try, 
+#             # otherwise if strength fails, only trigger except, never get the return response
+#             new_hero_power = HeroPower(
+#                 strength=request.get_json()["strength"],
+#                 hero_id=request.get_json()["hero_id"],
+#                 power_id=request.get_json()["power_id"]
+#             )
+#             db.session.add(new_hero_power)
+#             db.session.commit()
+
+#             hero = Hero.query.filter_by(id=new_hero_power.hero_id).first()
+#             response = make_response(hero.to_dict(), 201)
+#         except ValueError:
+#             response = {"error": "Invalid input"}
+#         return response

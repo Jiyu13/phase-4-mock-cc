@@ -12,7 +12,7 @@ db = SQLAlchemy(metadata = metadata)
 
 class Hero(db.Model, SerializerMixin):
     __tablename__ = 'heroes'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     super_name = db.Column(db.String)
@@ -27,7 +27,7 @@ class Hero(db.Model, SerializerMixin):
     powers = association_proxy('hero_powers', 'power')
 
     # serialize_rules
-    serialize_rules = ('-hero_powers.hero')
+    serialize_rules = ('-hero_powers.hero',)
 
     def __repr__(self):
         return f'''<Hero {self.id}; Name: {self.name}; Super Name: {self.super_name}>'''
@@ -51,14 +51,13 @@ class Power(db.Model, SerializerMixin):
     heros = association_proxy('hero_powers', 'hero')
 
     # serialize_rules
-    serialize_rules = ('-hero_powers.power')
+    serialize_rules = ('-hero_powers.power', "-created_at", "-updated_at")
 
     @validates("description")
     def validate_description(self, key, description):
         if not description and not len(description) >= 20:
             raise ValueError("description must be present and at least 20 characters long")
         return description
-
 
     def __repr__(self):
         return f'''<Power {self.id}; Name: {self.name}; Description: {self.description}>'''
