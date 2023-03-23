@@ -34,7 +34,7 @@ class HeroByID(Resource):
     def get(self, id):
         try:
             hero = Hero.query.filter_by(id=id).first()
-            hero_dict = hero.to_dict(rules=("-hero_powers",))
+            hero_dict = hero.to_dict(rules=("-hero_powers", "powers"))
             response = make_response(jsonify(hero_dict), 200)
         except ValueError:
             message = {

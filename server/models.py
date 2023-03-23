@@ -43,7 +43,7 @@ class Power(db.Model, SerializerMixin):
     hero_powers = db.relationship("HeroPower", backref="power")
     heroes = association_proxy("hero_powers", "hero")
 
-    serialize_rules = ("-hero_powers.power", "-hero_powers.hero", "-heroes.powers")
+    serialize_rules = ("-hero_powers.power", "-hero_powers.hero", "-heroes.powers", )
 
     @validates("description")
     def validate_description(self, key, description):

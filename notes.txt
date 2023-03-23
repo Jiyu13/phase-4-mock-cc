@@ -1,0 +1,29 @@
+>>> from models import db, Hero, Power, HeroPower
+>>> from app import app
+
+>>> p = Power.query.filter_by(id=1).first()
+>>> h_p = HeroPower.query.filter_by(id=p.id).first()
+
+>>> h_p.power
+<Power ID: 4, name: elasticity, description: can stretch the human body to extreme lengths>
+
+>>> h_p.powers
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+AttributeError: 'HeroPower' object has no attribute 'powers'
+
+>>> h_p.hero
+<Hero ID: 1, name: Kamala Khan, super_name: Ms. Marvel>
+# ============================================================================================
+
+
+>>> p.hero_powers
+[<HeroPower ID: 2, strength: Average>, <HeroPower ID: 4, strength: Strong>, <HeroPower ID: 7, strength: Weak>, <HeroPower ID: 8, strength: Average>]
+
+>>> p.hero_power
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+AttributeError: 'Power' object has no attribute 'hero_power'
+
+>>> p.heroes
+[<Hero ID: 2, name: Doreen Green, super_name: Squirrel Girl>, <Hero ID: 4, name: Janet Van Dyne, super_name: The Wasp>, <Hero ID: 7, name: Jean Grey, super_name: Dark Phoenix>, <Hero ID: 8, name: Ororo Munroe, super_name: Storm>]
