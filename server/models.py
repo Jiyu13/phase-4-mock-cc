@@ -47,6 +47,7 @@ class Power(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
+    # create a hero_powers.power in HeroPower (Child) class
     hero_powers = db.relationship("HeroPower", backref="power")
     heroes = association_proxy("hero_powers", "hero")
 
