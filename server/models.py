@@ -47,7 +47,9 @@ class Power(db.Model, SerializerMixin):
 
     @validates("description")
     def validate_description(self, key, description):
-        if not description or len(description) < 20:       # or????
+        # or????
+        # as long as there's one that not fulfill the condition, raise an error
+        if not description or len(description) < 20:       
             raise ValueError("description must be present and at least 20 characters long")
         return description
 
